@@ -76,15 +76,27 @@ jobs:
         run: echo "FIX_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
       - name: Get last commit since last tag
         run: |
-          PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p')
-          if [ -z "$PREV_TAG" ]; then
-            echo "No previous tag found. Using the first commit as a reference."
-            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
-          fi
-          echo "Previous tag or first commit: $PREV_TAG"
-          echo "LAST_COMMITS<<EOF" >> $GITHUB_ENV
-          git log $PREV_TAG..HEAD --oneline | while read line; do echo "- $line"; done >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          latest_tag=$(git tag --sort=-creatordate | sed -n '1p')
+          previous_tag=$(git tag --sort=-creatordate | sed -n '2p')
+
+          if [ ! -z "$latest_tag" ]; then
+            if [ -z "$previous_tag" ]; then
+              git log --all --oneline $latest_tag | while read line; do
+                echo "$line"
+              done > commit_list.txt
+              commit_message="Update CHANGELOG.md with commit list from repository start to $latest_tag"
+            else
+              git log --all --oneline $previous_tag..$latest_tag | while read line; do
+                echo "$line"
+              done > commit_list.txt
+              commit_message="Update CHANGELOG.md with commit list between $previous_tag and $latest_tag"
+            fi
+
+            echo "COMMIT_LIST<<EOF" >> $GITHUB_ENV
+            cat commit_list.txt | while read line; do
+              echo "$line"
+            done >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
       - name: Create comment on issue
         run: |
           issue_number=$(gh issue list --label release-${{ github.event.inputs.release_version }} --json number --jq '.[0].number')
@@ -96,5 +108,5 @@ jobs:
             - **Дата фикса:** ${{ env.FIX_DATE }}
             - **Автор фикса:** ${{ github.actor }}
             - **Коммиты с последнего релиза/фикса:** 
-             ${{ env.LAST_COMMITS }}
+             ${{ env.COMMIT_LIST }}
             - **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})
