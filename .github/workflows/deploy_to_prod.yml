@@ -1,0 +1,48 @@
+name: Deploy Release to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release Version"
+        required: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: "20.14.0"
+  DOCKER_IMAGE_NAME: shri-infra:latest
+
+jobs:
+  deploy_to_prod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Docker Image Exists
+        run: |
+          if ! docker pull ${{ secrets.REGISTRY_PATH }}:${{ github.event.inputs.release_version }}_latest; then
+            echo "Docker image not found."
+            exit 1
+          fi
+      - name: Deploy to Production
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << EOF
+            docker pull ${{ secrets.REGISTRY_PATH }}:${{ github.event.inputs.release_version }}_latest
+            docker stop web || true
+            docker rm web || true
+            docker run -d --name web ${{ secrets.REGISTRY_PATH }}:${{ github.event.inputs.release_version }}_latest
+          EOF
+          rm -f private_key.pem
+      - name: Add Comment to Issue
+        run: |
+          gh issue create \
+            --title "Release ${{ github.event.inputs.release_version }} Deployed to Production" \
+            --body "Релиз ${{ github.event.inputs.release_version }} успешно выкачен в прод. Дата: $(date +'%Y-%m-%d'), Выполнил: ${{ github.actor }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

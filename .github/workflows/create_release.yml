@@ -1,0 +1,109 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: '20.14.0'
+  DOCKER_IMAGE_NAME: shri-infra:latest
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      release_branch: ${{ steps.set_branch.outputs.release_branch }}
+    steps:
+      - name: Set Release Branch Name
+        id: set_branch
+        run: echo "::set-output name=release_branch::releases/${GITHUB_RUN_NUMBER}"
+
+  lint_and_test:
+    runs-on: ubuntu-latest
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install && npm run lint && npm test
+
+  build_and_push:
+    runs-on: ubuntu-latest
+    needs: lint_and_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install && npm run build
+      - name: Build and Push Docker Image
+        run: |
+          docker build . -t $DOCKER_IMAGE_NAME
+          echo "${{ secrets.YC_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+          docker tag $DOCKER_IMAGE_NAME ${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}
+          docker tag $DOCKER_IMAGE_NAME ${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}_latest
+          docker push ${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}
+          docker push ${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}_latest
+      - name: Configure Git
+        run: |
+          git config --global user.email "sdlmdev@yandex.ru"
+          git config --global user.name "Mikhail"
+      - name: Create and Push Release Branch and Tag
+        run: |
+          git checkout -b ${{ needs.prepare.outputs.release_branch }}
+          git push origin ${{ needs.prepare.outputs.release_branch }}
+          git tag -a v${{ github.run_number }} -m "Release ${{ github.run_number }}"
+          git push origin --tags
+
+  create_issue_and_update_changelog:
+    runs-on: ubuntu-latest
+    needs: build_and_push
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.release_branch }}
+      - name: Create Issue with Release Info
+        run: |
+          gh issue create \
+            --title "Release ${{ github.run_number }}" \
+            --body "### Release ${{ github.run_number }} created.\n**Дата:** $(date +'%Y-%m-%d')\n**Автор:** ${{ github.actor }}\n**Версия:** ${{ github.run_number }}\n**Docker образ:** [Ссылка](http://${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}_latest)" \
+            --label "release,release-${{ github.run_number }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update Changelog
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0)
+          echo "## Release ${{ github.run_number }} - $(date +'%Y-%m-%d')" > temp_CHANGELOG.md
+          git log --pretty=format:"- %s" $latest_tag..HEAD >> temp_CHANGELOG.md
+          cat CHANGELOG.md >> temp_CHANGELOG.md
+          mv temp_CHANGELOG.md CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG for release ${{ github.run_number }}"
+          git push origin ${{ needs.prepare.outputs.release_branch }}
+
+  create_and_merge_pull_request:
+    runs-on: ubuntu-latest
+    needs: create_issue_and_update_changelog
+    steps:
+      - name: Create Pull Request
+        run: |
+          gh pr create \
+            --title "Update CHANGELOG for release ${{ github.run_number }}" \
+            --body "This PR updates the CHANGELOG.md file for release ${{ github.run_number }}." \
+            --base main \
+            --head ${{ needs.prepare.outputs.release_branch }}
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+      - name: Merge Pull Request
+        run: |
+          pr_number=$(gh pr list --base main --head ${{ needs.prepare.outputs.release_branch }} --json number --jq '.[0].number')
+          gh pr merge $pr_number --admin --squash --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}

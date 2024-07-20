@@ -1,0 +1,80 @@
+name: Fix Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release Version"
+        required: true
+      issue_number:
+        description: "Issue Number for Comment"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY_ID: "<идентификатор_реестра>"
+  NODE_VERSION: "14.x"
+
+jobs:
+  check_and_test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [lint, test]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: releases/${{ github.event.inputs.release_version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install
+      - run: npm run ${{ matrix.task }}
+
+  build_and_push_docker:
+    runs-on: ubuntu-latest
+    needs: check_and_test
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: releases/${{ github.event.inputs.release_version }}
+      - name: Build Docker image
+        run: |
+          docker build . -t cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+          docker tag cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_latest
+      - name: Push Docker image
+        run: |
+          echo "${{ secrets.YC_TOKEN }}" | docker login cr.yandex --username oauth --password-stdin
+          docker push cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+          docker push cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_latest
+
+  create_tag_and_comment:
+    runs-on: ubuntu-latest
+    needs: build_and_push_docker
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: releases/${{ github.event.inputs.release_version }}
+      - name: Create and Push Tag
+        run: |
+          git tag -a ${github.event.inputs.release_version}_fix${{ github.run_number }} -m "Fix release ${{ github.event.inputs.release_version }} fix number ${{ github.run_number }}"
+          git push origin ${github.event.inputs.release_version}_fix${{ github.run_number }}
+      - name: Add Comment to Issue
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.inputs.issue_number }}
+          body: |
+            **Фикс релиза: ${{ github.event.inputs.release_version }}**
+            - **Дата фикса:** $(date +'%Y-%m-%d')
+            - **Автор фикса:** ${{ github.actor }}
+            - **Коммиты с последнего релиза/фикса:** 
+            ```
+            $(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD)
+            ```
+            - **Docker образ:** [cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
