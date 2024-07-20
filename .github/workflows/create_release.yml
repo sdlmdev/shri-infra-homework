@@ -77,7 +77,11 @@ jobs:
         run: |
           gh issue create \
             --title "Release ${{ github.run_number }}" \
-            --body "### Release ${{ github.run_number }} created.\n**Дата:** $(date +'%Y-%m-%d')\n**Автор:** ${{ github.actor }}\n**Версия:** ${{ github.run_number }}\n**Docker образ:** [Ссылка](http://${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}_latest)" \
+            --body "### Release ${{ github.run_number }} created.
+            **Дата:** $(date +'%Y-%m-%d')
+            **Автор:** ${{ github.actor }}
+            **Версия:** ${{ github.run_number }}
+            **Docker образ:** [Ссылка](http://${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}_latest)" \
             --label "release-${{ github.run_number }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
