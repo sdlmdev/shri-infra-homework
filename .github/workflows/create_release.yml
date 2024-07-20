@@ -72,7 +72,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare.outputs.release_branch }}
+          ref: ${{ github.run_number }}
       - name: Create Issue with Release Info
         run: |
           gh issue create \
@@ -96,7 +96,7 @@ jobs:
           mv temp_CHANGELOG.md CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG for release ${{ github.run_number }}"
-          git push --set-upstream origin releases/${{ github.run_number }}
+          git push origin releases/${{ github.run_number }}
 
   create_and_merge_pull_request:
     runs-on: ubuntu-latest
