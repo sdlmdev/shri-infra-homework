@@ -46,6 +46,10 @@ jobs:
           docker build . -t shri-infra:latest
           docker tag shri-infra:latest $(echo ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} | tr '[:upper:]' '[:lower:]')
           docker tag shri-infra:latest $(echo ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_latest | tr '[:upper:]' '[:lower:]')
+      - name: Configure Git
+        run: |
+          git config --global user.email "sdlmdev@yandex.ru"
+          git config --global user.name "Mikhail"
       - name: Push Docker image
         run: |
           echo "${{ secrets.YC_TOKEN }}" | docker login cr.yandex --username oauth --password-stdin
