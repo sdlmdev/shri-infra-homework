@@ -6,6 +6,9 @@ on:
       release_version:
         description: "Release Version"
         required: true
+      issue_number:
+        description: "Issue Number for Comment"
+        required: true
 
 permissions:
   contents: write
@@ -40,8 +43,9 @@ jobs:
           ref: releases/${{ github.event.inputs.release_version }}
       - name: Build Docker image
         run: |
-          docker build . -t ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
-          docker tag ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_latest
+          docker build . -t shri-infra:latest
+          docker tag ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+          docker tag ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_latest
       - name: Push Docker image
         run: |
           echo "${{ secrets.YC_TOKEN }}" | docker login cr.yandex --username oauth --password-stdin
