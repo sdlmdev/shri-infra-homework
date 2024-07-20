@@ -83,4 +83,4 @@ jobs:
           ```
           - **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ADMIN_TOKEN }}
