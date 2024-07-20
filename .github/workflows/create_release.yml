@@ -51,6 +51,10 @@ jobs:
           docker tag $DOCKER_IMAGE_NAME ${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}_latest
           docker push ${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}
           docker push ${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}_latest
+      - name: Configure Git
+        run: |
+          git config --global user.email "sdlmdev@yandex.ru"
+          git config --global user.name "Mikhail"
       - name: Create and Push Release Branch and Tag
         run: |
           git checkout -b releases/${{ github.run_number }}
@@ -62,6 +66,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_and_push
     steps:
+      - name: Create Label
+        run: |
+          gh label create "release-${{ github.run_number }}" --color "#FBCA04" || echo "Label already exists"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare.outputs.release_branch }}
