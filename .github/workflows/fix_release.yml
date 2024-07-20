@@ -15,8 +15,7 @@ permissions:
   packages: write
 
 env:
-  REGISTRY_ID: "<идентификатор_реестра>"
-  NODE_VERSION: "14.x"
+  NODE_VERSION: "20.14.0"
 
 jobs:
   check_and_test:
@@ -44,13 +43,13 @@ jobs:
           ref: releases/${{ github.event.inputs.release_version }}
       - name: Build Docker image
         run: |
-          docker build . -t cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
-          docker tag cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_latest
+          docker build . -t ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+          docker tag ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_latest
       - name: Push Docker image
         run: |
           echo "${{ secrets.YC_TOKEN }}" | docker login cr.yandex --username oauth --password-stdin
-          docker push cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
-          docker push cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_latest
+          docker push ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+          docker push ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_latest
 
   create_tag_and_comment:
     runs-on: ubuntu-latest
@@ -75,6 +74,6 @@ jobs:
             ```
             $(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD)
             ```
-            - **Docker образ:** [cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://cr.yandex/${{ env.REGISTRY_ID }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})
+            - **Docker образ:** [${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
