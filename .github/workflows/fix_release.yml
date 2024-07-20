@@ -75,7 +75,9 @@ jobs:
       - name: Get current date
         run: echo "FIX_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
       - name: Get last commit since last tag
-        run: echo "LAST_COMMITS=$(git log --pretty=format:'- %s' $(git describe --tags --abbrev=0)..HEAD)" >> $GITHUB_ENV
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          echo "LAST_COMMITS=$(git log $PREV_TAG..HEAD --oneline)" >> $GITHUB_ENV
       - name: Create comment on issue
         run: |
           issue_number=$(gh issue list --label release-${{ github.event.inputs.release_version }} --json number --jq '.[0].number')
