@@ -72,17 +72,14 @@ jobs:
           git tag -a "${{ github.event.inputs.release_version }}_fix${{ github.run_number }}" -m "Fix release ${{ github.event.inputs.release_version }} fix number ${{ github.run_number }}"
           git push origin "${{ github.event.inputs.release_version }}_fix${{ github.run_number }}"
       - name: Add Comment to Issue
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: ${{ github.event.inputs.issue_number }}
-          body: |
-            **Фикс релиза: ${{ github.event.inputs.release_version }}**
-            - **Дата фикса:** $(date +'%Y-%m-%d')
-            - **Автор фикса:** ${{ github.actor }}
-            - **Коммиты с последнего релиза/фикса:** 
-            ```
-            $(git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD)
-            ```
-            - **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})
+        run: |
+          gh issue comment ${{ github.event.inputs.issue_number }} --body "**Фикс релиза: ${{ github.event.inputs.release_version }}**
+          - **Дата фикса:** $(date +'%Y-%m-%d')
+          - **Автор фикса:** ${{ github.actor }}
+          - **Коммиты с последнего релиза/фикса:** 
+          ```
+          $(git log --pretty=format:'- %s' $(git describe --tags --abbrev=0)..HEAD)
+          ```
+          - **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
