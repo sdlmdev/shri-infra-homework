@@ -6,16 +6,13 @@ on:
       release_version:
         description: "Release Version"
         required: true
-      issue_number:
-        description: "Issue Number for Comment"
-        required: true
 
 permissions:
   contents: write
   packages: write
 
 env:
-  NODE_VERSION: "20.14.0"
+  NODE_VERSION: '20.14.0'
 
 jobs:
   check_and_test:
@@ -24,7 +21,7 @@ jobs:
       matrix:
         task: [lint, test]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: releases/${{ github.event.inputs.release_version }}
       - name: Setup Node.js
@@ -38,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: check_and_test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: releases/${{ github.event.inputs.release_version }}
       - name: Build Docker image
@@ -55,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_and_push_docker
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: releases/${{ github.event.inputs.release_version }}
       - name: Create and Push Tag

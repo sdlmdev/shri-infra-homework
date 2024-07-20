@@ -121,6 +121,6 @@ jobs:
       - name: Merge Pull Request
         run: |
           pr_number=$(gh pr list --base main --head releases/${{ github.run_number }} --json number --jq '.[0].number')
-          gh pr merge $pr_number --admin --squash --delete-branch
+          gh pr merge $pr_number --admin
         env:
           GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
