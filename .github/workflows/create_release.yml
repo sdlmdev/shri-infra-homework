@@ -96,7 +96,7 @@ jobs:
           mv temp_CHANGELOG.md CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG for release ${{ github.run_number }}"
-          git push origin releases/${{ github.run_number }}
+          git push releases/${{ github.run_number }}
 
   create_and_merge_pull_request:
     runs-on: ubuntu-latest
