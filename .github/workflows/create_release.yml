@@ -68,7 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.run_number }}
+          ref: ${{ needs.prepare.outputs.release_branch }}
       - name: Create Issue with Release Info
         run: |
           gh issue create \
