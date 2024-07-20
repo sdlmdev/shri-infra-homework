@@ -81,6 +81,8 @@ jobs:
             --label "release-${{ github.run_number }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch Tags
+        run: git fetch --tags
       - name: Update Changelog
         run: |
           latest_tag=v${{ github.run_number }}
