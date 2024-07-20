@@ -44,13 +44,13 @@ jobs:
       - name: Build Docker image
         run: |
           docker build . -t shri-infra:latest
-          docker tag shri-infra:latest ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
-          docker tag shri-infra:latest ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_latest
+          docker tag shri-infra:latest $(echo ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} | tr '[:upper:]' '[:lower:]')
+          docker tag shri-infra:latest $(echo ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_latest | tr '[:upper:]' '[:lower:]')
       - name: Push Docker image
         run: |
           echo "${{ secrets.YC_TOKEN }}" | docker login cr.yandex --username oauth --password-stdin
-          docker push ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
-          docker push ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_latest
+          docker push $(echo ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} | tr '[:upper:]' '[:lower:]')
+          docker push $(echo ${{ secrets.YC_TOKEN }}/app:${{ github.event.inputs.release_version }}_latest | tr '[:upper:]' '[:lower:]')
 
   create_tag_and_comment:
     runs-on: ubuntu-latest
