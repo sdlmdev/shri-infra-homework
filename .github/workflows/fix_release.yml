@@ -76,8 +76,14 @@ jobs:
         run: echo "FIX_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
       - name: Get last commit since last tag
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
-          echo "LAST_COMMITS=$(git log $PREV_TAG..HEAD --oneline)" >> $GITHUB_ENV
+          PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found. Using the first commit as a reference."
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD) # Получаем первый коммит
+          fi
+          echo "Previous tag or first commit: $PREV_TAG"
+          LAST_COMMITS=$(git log $PREV_TAG..HEAD --oneline)
+          echo "LAST_COMMITS=$LAST_COMMITS" >> $GITHUB_ENV
       - name: Create comment on issue
         run: |
           issue_number=$(gh issue list --label release-${{ github.event.inputs.release_version }} --json number --jq '.[0].number')
