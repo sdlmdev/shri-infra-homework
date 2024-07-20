@@ -70,7 +70,7 @@ jobs:
         run: |
           gh label create "release-${{ github.run_number }}" --color "#FBCA04" || echo "Label already exists"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.prepare.outputs.release_branch }}
