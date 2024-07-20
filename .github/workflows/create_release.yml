@@ -78,7 +78,7 @@ jobs:
           gh issue create \
             --title "Release ${{ github.run_number }}" \
             --body "### Release ${{ github.run_number }} created.\n**Дата:** $(date +'%Y-%m-%d')\n**Автор:** ${{ github.actor }}\n**Версия:** ${{ github.run_number }}\n**Docker образ:** [Ссылка](http://${{ secrets.REGISTRY_PATH }}:${{ github.run_number }}_latest)" \
-            --label "release,release-${{ github.run_number }}"
+            --label "release-${{ github.run_number }}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update Changelog
