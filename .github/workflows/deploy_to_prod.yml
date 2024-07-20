@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Check Docker Image Exists
         run: |
-          if ! docker pull ${{ secrets.REGISTRY_PATH }}:${{ github.event.inputs.release_version }}_latest; then
+          if ! docker pull ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_latest; then
             echo "Docker image not found."
             exit 1
           fi
@@ -33,10 +33,10 @@ jobs:
           echo "$SSH_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << EOF
-            docker pull ${{ secrets.REGISTRY_PATH }}:${{ github.event.inputs.release_version }}_latest
+            docker pull ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_latest
             docker stop web || true
             docker rm web || true
-            docker run -d --name web ${{ secrets.REGISTRY_PATH }}:${{ github.event.inputs.release_version }}_latest
+            docker run -d --name web ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_latest
           EOF
           rm -f private_key.pem
       - name: Add Comment to Issue
