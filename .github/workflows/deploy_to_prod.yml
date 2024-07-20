@@ -45,4 +45,4 @@ jobs:
             --title "Release ${{ github.event.inputs.release_version }} Deployed to Production" \
             --body "Релиз ${{ github.event.inputs.release_version }} успешно выкачен в прод. Дата: $(date +'%Y-%m-%d'), Выполнил: ${{ github.actor }}"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
