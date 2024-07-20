@@ -83,6 +83,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Fetch Tags
         run: git fetch --tags
+      - name: Configure Git
+        run: |
+          git config --global user.email "sdlmdev@yandex.ru"
+          git config --global user.name "Mikhail"
       - name: Update Changelog
         run: |
           latest_tag=v${{ github.run_number }}
