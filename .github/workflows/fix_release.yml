@@ -79,11 +79,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
           BODY: >
-            ### Фикс релиза: ${{ github.event.inputs.release_version }}
+            "**Фикс релиза: ${{ github.event.inputs.release_version }}**
             - **Дата фикса:** $(date +'%Y-%m-%d')
             - **Автор фикса:** ${{ github.actor }}
             - **Коммиты с последнего релиза/фикса:** 
-              ```
-              $(git log --pretty=format:'- %s' $(git describe --tags --abbrev=0)..HEAD)
-              ```
-            - **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})
+            ```
+            $(git log --pretty=format:'- %s' $(git describe --tags --abbrev=0)..HEAD)
+            ```
+            - **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})"
