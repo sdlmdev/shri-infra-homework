@@ -44,8 +44,8 @@ jobs:
       - name: Build Docker image
         run: |
           docker build . -t shri-infra:latest
-          docker tag ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
-          docker tag ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_latest
+          docker tag shri-infra:latest ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}
+          docker tag shri-infra:latest ${{ secrets.YC_TOKEN }}:${{ github.event.inputs.release_version }}_latest
       - name: Push Docker image
         run: |
           echo "${{ secrets.YC_TOKEN }}" | docker login cr.yandex --username oauth --password-stdin
