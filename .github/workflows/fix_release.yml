@@ -76,8 +76,11 @@ jobs:
         run: echo "FIX_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
       - name: Get last commit since last tag
         run: |
-          LAST_COMMITS=$(git log $(git describe --tags --abbrev=0)..HEAD --oneline)
-          echo "LAST_COMMITS=$LAST_COMMITS" >> $GITHUB_ENV
+          LATEST_TAG=$(git describe --tags --abbrev=0 || true)
+          COMMIT_LOG=$(git log $LATEST_TAG..HEAD --pretty=format:"- %s")
+          echo "COMMIT_LOG<<EOF" >> $GITHUB_ENV
+          echo "$COMMIT_LOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Create comment on issue
         run: |
           issue_number=$(gh issue list --label release-${{ github.event.inputs.release_version }} --json number --jq '.[0].number')
@@ -89,5 +92,5 @@ jobs:
             - **Дата фикса:** ${{ env.FIX_DATE }}
             - **Автор фикса:** ${{ github.actor }}
             - **Коммиты с последнего релиза/фикса:** 
-              ${{ env.LAST_COMMITS }}
+            ${{ env.COMMIT_LOG }}
             - **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})
