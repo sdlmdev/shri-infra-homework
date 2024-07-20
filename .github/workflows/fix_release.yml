@@ -76,9 +76,15 @@ jobs:
         run: echo "FIX_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
       - name: Get last commit since last tag
         run: |
-          previous_tag=$(git describe --tags --abbrev=0 HEAD^)
-          commits=$(git log $previous_tag..HEAD --oneline)
+          previous_tag=$(git tag --sort=-creatordate | head -n 1)
+          if [ -z "$previous_tag" ]; then
+            first_commit=$(git rev-list --max-parents=0 HEAD)
+            commits=$(git log $first_commit..HEAD --oneline)
+          else
+            commits=$(git log $previous_tag..HEAD --oneline)
+          fi
           echo "COMMITS=$commits" >> $GITHUB_ENV
+        shell: /usr/bin/bash -e {0}
       - name: Create comment on issue
         run: |
           issue_number=$(gh issue list --label release-${{ github.event.inputs.release_version }} --json number --jq '.[0].number')
