@@ -83,7 +83,7 @@ jobs:
           fi
           echo "Previous tag or first commit: $PREV_TAG"
           echo "LAST_COMMITS<<EOF" >> $GITHUB_ENV
-          git log $PREV_TAG..HEAD --oneline >> $GITHUB_ENV
+          git log $PREV_TAG..HEAD --oneline | while read line; do echo "- $line"; done >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Create comment on issue
         run: |
