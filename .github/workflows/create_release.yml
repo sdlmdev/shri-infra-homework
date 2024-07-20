@@ -16,7 +16,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      release_branch: ${{ steps.set_branch.outputs.release_branch }}
+      release_branch: ${{ github.run_number }}
     steps:
       - name: Set Release Branch Name
         id: set_branch
@@ -57,8 +57,8 @@ jobs:
           git config --global user.name "Mikhail"
       - name: Create and Push Release Branch and Tag
         run: |
-          git checkout -b ${{ needs.prepare.outputs.release_branch }}
-          git push origin ${{ needs.prepare.outputs.release_branch }}
+          git checkout -b releases/${{ github.run_number }}
+          git push origin releases/${{ github.run_number }}
           git tag -a v${{ github.run_number }} -m "Release ${{ github.run_number }}"
           git push origin --tags
 
@@ -68,7 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.prepare.outputs.release_branch }}
+          ref: ${{ github.run_number }}
       - name: Create Issue with Release Info
         run: |
           gh issue create \
@@ -86,7 +86,7 @@ jobs:
           mv temp_CHANGELOG.md CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG for release ${{ github.run_number }}"
-          git push origin ${{ needs.prepare.outputs.release_branch }}
+          git push origin ${{ github.run_number }}
 
   create_and_merge_pull_request:
     runs-on: ubuntu-latest
@@ -98,7 +98,7 @@ jobs:
             --title "Update CHANGELOG for release ${{ github.run_number }}" \
             --body "This PR updates the CHANGELOG.md file for release ${{ github.run_number }}." \
             --base main \
-            --head ${{ needs.prepare.outputs.release_branch }}
+            --head ${{ github.run_number }}
         env:
           GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
       - name: Merge Pull Request
