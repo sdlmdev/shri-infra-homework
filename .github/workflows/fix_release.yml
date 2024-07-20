@@ -82,7 +82,7 @@ jobs:
           gh issue comment "$issue_number" --body "$BODY"
         env:
           GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
-          BODY: >
+          BODY: |
             ### Фикс релиза: ${{ github.event.inputs.release_version }}
             - **Дата фикса:** ${{ env.FIX_DATE }}
             - **Автор фикса:** ${{ github.actor }}
