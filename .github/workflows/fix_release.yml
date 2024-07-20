@@ -16,7 +16,7 @@ permissions:
   issues: write
 
 env:
-  NODE_VERSION: '20.14.0'
+  NODE_VERSION: "20.14.0"
 
 jobs:
   check_and_test:
@@ -96,5 +96,5 @@ jobs:
             - **Дата фикса:** ${{ env.FIX_DATE }}
             - **Автор фикса:** ${{ github.actor }}
             - **Коммиты с последнего релиза/фикса:** 
-            - **${{ env.LAST_COMMITS }}**
+             ${{ env.LAST_COMMITS }}
             - **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})
