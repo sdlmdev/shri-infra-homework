@@ -1,0 +1,89 @@
+name: Fix Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release Version"
+        required: true
+      issue_number:
+        description: "Issue Number for Comment"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
+
+env:
+  NODE_VERSION: "20.14.0"
+
+jobs:
+  check_and_test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        task: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: releases/${{ github.event.inputs.release_version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm install
+      - run: npm run ${{ matrix.task }}
+
+  build_and_push_docker:
+    runs-on: ubuntu-latest
+    needs: check_and_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: releases/${{ github.event.inputs.release_version }}
+      - name: Build Docker image
+        run: |
+          docker build . -t shri-infra:latest
+          docker tag shri-infra:latest $(echo ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} | tr '[:upper:]' '[:lower:]')
+          docker tag shri-infra:latest $(echo ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_latest | tr '[:upper:]' '[:lower:]')
+      - name: Configure Git
+        run: |
+          git config --global user.email "sdlmdev@yandex.ru"
+          git config --global user.name "Mikhail"
+      - name: Push Docker image
+        run: |
+          echo "${{ secrets.YC_TOKEN }}" | docker login cr.yandex --username oauth --password-stdin
+          docker push $(echo ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }} | tr '[:upper:]' '[:lower:]')
+          docker push $(echo ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_latest | tr '[:upper:]' '[:lower:]')
+
+  create_tag_and_comment:
+    runs-on: ubuntu-latest
+    needs: build_and_push_docker
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: releases/${{ github.event.inputs.release_version }}
+      - name: Configure Git
+        run: |
+          git config --global user.email "sdlmdev@yandex.ru"
+          git config --global user.name "Mikhail"
+      - name: Create and Push Tag
+        run: |
+          git tag -a "${{ github.event.inputs.release_version }}_fix${{ github.run_number }}" -m "Fix release ${{ github.event.inputs.release_version }} fix number ${{ github.run_number }}"
+          git push origin "${{ github.event.inputs.release_version }}_fix${{ github.run_number }}"
+      - name: Create GitHub issue
+        run: |
+          touch $FILE
+          echo "### Фикс релиза: ${{ github.event.inputs.release_version }}" >> $FILE
+          echo "- **Дата фикса:** $(date +%Y-%m-%d)" >> $FILE
+          echo "- **Автор фикса:** ${{ github.actor }}" >> $FILE
+          echo "- **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})" >> $FILE
+          echo "- **Коммиты с последнего релиза/фикса:**" >> $FILE
+          git log --pretty=format:"%h - %an, %ar - %s" -10 >> $FILE
+          issue_number=$(gh issue list --label release-${{ github.event.inputs.release_version }} --json number --jq '.[0].number')
+          gh issue comment "$issue_number" --body "$(cat $FILE)"
+          rm $FILE
+        env:
+          FILE: issue.txt
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}

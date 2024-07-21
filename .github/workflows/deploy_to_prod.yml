@@ -1,0 +1,57 @@
+name: Deploy Release to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release Version"
+        required: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: "20.14.0"
+  DOCKER_IMAGE_NAME: shri-infra:latest
+
+jobs:
+  deploy_to_prod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to Yandex Container Registry
+        run: echo "${{ secrets.YC_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+      - name: Check Docker Image Exists
+        run: |
+          if ! docker pull ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_latest; then
+            echo "Docker image not found."
+            exit 1
+          fi
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASS }}
+          script: |
+            echo "${{ secrets.YC_TOKEN }}" | docker login --username oauth --password-stdin cr.yandex
+            docker pull ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_latest
+            docker stop dockerone || true
+            docker rm dockerone || true
+            docker run -d --name dockerone -p 3000:3000 ${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_latest
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Get current date
+        run: echo "FIX_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Add Comment to Issue
+        run: |
+            issue_number=$(gh issue list --label release-${{ github.event.inputs.release_version }} --json number --jq '.[0].number')
+            gh issue comment "$issue_number" --body "$BODY"
+        env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          BODY: |
+            ### Release ${{ github.event.inputs.release_version }} Deployed to Production.
+            **Дата:** ${{ env.FIX_DATE }}
+            **Выполнил:** ${{ github.actor }}
