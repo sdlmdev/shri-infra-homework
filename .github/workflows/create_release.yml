@@ -76,9 +76,15 @@ jobs:
       - name: Create Issue with Release Info
         run: |
           gh issue create \
-          --title "Release ${{ github.run_number }}" \
-          --body "### Release ${{ github.run_number }} created.\n**Дата:** $(date +'%Y-%m-%d')\n**Автор:** ${{ github.actor }}\n**Версия:** ${{ github.run_number }}\n**Docker образ:** [Ссылка](http://${{ secrets.REGISTRY_PATH }}/app:${{ github.run_number }})\n**Коммиты с последнего релиза/фикса:**\n$(git log --pretty=format:'%h - %an, %ar - %s' -10)" \
-          --label "release-${{ github.run_number }}"
+            --title "Release ${{ github.run_number }}" \
+            --body "### Release ${{ github.run_number }} created.
+            **Дата:** $(date +'%Y-%m-%d')
+            **Автор:** ${{ github.actor }}
+            **Версия:** ${{ github.run_number }}
+            **Docker образ:** [Ссылка](http://${{ secrets.REGISTRY_PATH }}/app:${{ github.run_number }})
+            **Коммиты с последнего релиза/фикса:**
+            $(git log --pretty=format:"%h - %an, %ar - %s" -10)" \
+            --label "release-${{ github.run_number }}"
         env:
           GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
       - name: Fetch Tags
