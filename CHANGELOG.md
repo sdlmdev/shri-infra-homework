@@ -1,3 +1,6 @@
+## RELEASE 37 - 2024-07-21
+
+b643b22 - Mikhail, 3 minutes ago - fix
 ## RELEASE 36 - 2024-07-21
 
 60b5002 - Mikhail, 3 minutes ago - fix
