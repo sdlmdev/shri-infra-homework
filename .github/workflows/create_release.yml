@@ -81,6 +81,8 @@ jobs:
             **Дата:** $(date +'%Y-%m-%d')
             **Автор:** ${{ github.actor }}
             **Версия:** ${{ github.run_number }}
+            **Коммиты с последнего релиза/фикса:**
+            $(git log --pretty=format:"%h - %an, %ar - %s" -10)
             **Docker образ:** [Ссылка](http://${{ secrets.REGISTRY_PATH }}/app:${{ github.run_number }})" \
             --label "release-${{ github.run_number }}"
         env:

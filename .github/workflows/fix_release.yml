@@ -72,7 +72,7 @@ jobs:
         run: |
           git tag -a "${{ github.event.inputs.release_version }}_fix${{ github.run_number }}" -m "Fix release ${{ github.event.inputs.release_version }} fix number ${{ github.run_number }}"
           git push origin "${{ github.event.inputs.release_version }}_fix${{ github.run_number }}"
-      - name: Create GitHub issue
+      - name: Update GitHub issue
         run: |
           touch $FILE
           echo "### Фикс релиза: ${{ github.event.inputs.release_version }}" >> $FILE
