@@ -1,3 +1,6 @@
+## RELEASE 36 - 2024-07-21
+
+60b5002 - Mikhail, 3 minutes ago - fix
 ## RELEASE 34 - 2024-07-21
 
 65caccf - Mikhail Sedlachek, 4 minutes ago - Update CHANGELOG for release 33 (#41)
