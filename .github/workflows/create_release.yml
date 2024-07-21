@@ -96,8 +96,9 @@ jobs:
       - name: Update Changelog
         run: |
           latest_tag=v${{ github.run_number }}
-          echo "## Release ${{ github.run_number }} - $(date +'%Y-%m-%d')" > temp_CHANGELOG.md
+          echo "RELEASE ${{ github.run_number }} - $(date +'%Y-%m-%d')" > temp_CHANGELOG.md
           git log --pretty=format:"%h - %an, %ar - %s" -10 >> temp_CHANGELOG.md
+          echo "" >> temp_CHANGELOG.md
           cat CHANGELOG.md >> temp_CHANGELOG.md
           mv temp_CHANGELOG.md CHANGELOG.md
           git add CHANGELOG.md
