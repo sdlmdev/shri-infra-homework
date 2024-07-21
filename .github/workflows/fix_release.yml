@@ -76,8 +76,8 @@ jobs:
         run: |
           touch $FILE
           echo "### Фикс релиза: ${{ github.event.inputs.release_version }}" >> $FILE
-          echo "- **Дата фикса:** $(date +%Y-%m-%d)" >> $FILE
-          echo "- **Автор фикса:** ${{ github.actor }}" >> $FILE
+          echo "- **Дата:** $(date +%Y-%m-%d)" >> $FILE
+          echo "- **Автор:** ${{ github.actor }}" >> $FILE
           echo "- **Docker образ:** [${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }}](https://${{ secrets.REGISTRY_PATH }}/app:${{ github.event.inputs.release_version }}_fix${{ github.run_number }})" >> $FILE
           echo "- **Коммиты с последнего релиза/фикса:**" >> $FILE
           git log --pretty=format:"%h - %an, %ar - %s" -10 >> $FILE
