@@ -112,6 +112,16 @@ jobs:
         with:
           ref: main
 
+      - name: Update CHANGELOG
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0)
+          echo "## Release ${{ github.run_number }} - $(date +'%Y-%m-%d')" > temp_CHANGELOG.md
+          git log $latest_tag..HEAD --pretty=format:"- %s" >> temp_CHANGELOG.md
+          echo "" >> temp_CHANGELOG.md
+          cat CHANGELOG.md >> temp_CHANGELOG.md
+          mv temp_CHANGELOG.md CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG for release ${{ github.run_number }}"
       - name: Create Pull Request
         run: |
           gh pr create \
