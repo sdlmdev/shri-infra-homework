@@ -1,3 +1,6 @@
+## RELEASE 38 - 2024-07-21
+
+89ac027 - Mikhail Sedlachek, 3 minutes ago - Update CHANGELOG for release 37 (#47)
 ## RELEASE 37 - 2024-07-21
 
 b643b22 - Mikhail, 3 minutes ago - fix
