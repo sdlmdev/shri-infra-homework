@@ -114,7 +114,12 @@ jobs:
 
       - name: Update CHANGELOG
         run: |
-          latest_tag=$(git describe --tags --abbrev=0)
+          if git describe --tags --abbrev=0 2>/dev/null; then
+            latest_tag=$(git describe --tags --abbrev=0)
+          else
+            echo "No tags found. Using the first commit."
+            latest_tag=$(git rev-list --max-parents=0 HEAD)
+          fi
           echo "## Release ${{ github.run_number }} - $(date +'%Y-%m-%d')" > temp_CHANGELOG.md
           git log $latest_tag..HEAD --pretty=format:"- %s" >> temp_CHANGELOG.md
           echo "" >> temp_CHANGELOG.md
