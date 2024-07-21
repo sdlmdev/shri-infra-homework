@@ -111,7 +111,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-
+      - name: Configure Git
+        run: |
+          git config --global user.email "sdlmdev@yandex.ru"
+          git config --global user.name "Mikhail"
       - name: Update CHANGELOG
         run: |
           if git describe --tags --abbrev=0 2>/dev/null; then
